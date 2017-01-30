@@ -27,6 +27,7 @@
   },
   "scripts": {
     "image-cache:clean": "rm ./images/.cache",
-    "start": "gulp watch"
+    "start": "gulp watch",
+    "build": "gulp blog image style"
   }
 }
