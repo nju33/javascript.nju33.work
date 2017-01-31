@@ -1806,9 +1806,9 @@ diz-theme-minimalist@^0.1.3:
     react-burger-menu "^1.10.10"
     react-dom "^15.4.1"
 
-diz-theme-minimalist@^0.2.2:
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/diz-theme-minimalist/-/diz-theme-minimalist-0.2.2.tgz#52a5bb96b116950535ac3a69494c0c05c05c9a94"
+diz-theme-minimalist@^0.2.3:
+  version "0.2.3"
+  resolved "https://registry.yarnpkg.com/diz-theme-minimalist/-/diz-theme-minimalist-0.2.3.tgz#99090409dcd0fcbfaa9ddcb29bf8215d2b99256f"
   dependencies:
     diz-theme "^0.0.1"
     lodash.isnull "^3.0.0"
@@ -1817,6 +1817,7 @@ diz-theme-minimalist@^0.2.2:
     react "^15.4.1"
     react-burger-menu "^1.10.10"
     react-dom "^15.4.1"
+    react-twemoji "^0.0.5"
 
 diz-theme@^0.0.1:
   version "0.0.1"
@@ -3926,7 +3927,7 @@ lodash@^3.10.1:
   version "3.10.1"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-3.10.1.tgz#5bf45e8e49ba4189e17d482789dfd15bd140b7b6"
 
-lodash@^4.11.2, lodash@^4.14.0, lodash@^4.2.0:
+lodash@^4.11.2, lodash@^4.14.0, lodash@^4.16.2, lodash@^4.2.0:
   version "4.17.4"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.4.tgz#78203a4d1c328ae1d86dca6460e369b57f4055ae"
 
@@ -5034,7 +5035,7 @@ react-burger-menu@^1.10.10:
     radium "^0.18.0"
     snapsvg-cjs "0.0.4"
 
-react-dom@^15.4.1:
+react-dom@^15.0.1, react-dom@^15.4.1:
   version "15.4.2"
   resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-15.4.2.tgz#015363f05b0a1fd52ae9efdd3a0060d90695208f"
   dependencies:
@@ -5042,7 +5043,16 @@ react-dom@^15.4.1:
     loose-envify "^1.1.0"
     object-assign "^4.1.0"
 
-react@^15.4.1:
+react-twemoji@^0.0.5:
+  version "0.0.5"
+  resolved "https://registry.yarnpkg.com/react-twemoji/-/react-twemoji-0.0.5.tgz#cf6b6e05c58cb94316d05425e541bacf4e825c5b"
+  dependencies:
+    lodash "^4.16.2"
+    react "^15.0.1"
+    react-dom "^15.0.1"
+    twemoji "^2.0.5"
+
+react@^15.0.1, react@^15.4.1:
   version "15.4.2"
   resolved "https://registry.yarnpkg.com/react/-/react-15.4.2.tgz#41f7991b26185392ba9bae96c8889e7e018397ef"
   dependencies:
@@ -5932,6 +5942,10 @@ tunnel-agent@^0.4.0, tunnel-agent@~0.4.1:
 tweetnacl@^0.14.3, tweetnacl@~0.14.0:
   version "0.14.5"
   resolved "https://registry.yarnpkg.com/tweetnacl/-/tweetnacl-0.14.5.tgz#5ae68177f192d4456269d108afa93ff8743f4f64"
+
+twemoji@^2.0.5:
+  version "2.2.3"
+  resolved "https://registry.yarnpkg.com/twemoji/-/twemoji-2.2.3.tgz#44759c4f846c04fc92ffd466c528b99f8e12b757"
 
 typedarray@^0.0.6:
   version "0.0.6"

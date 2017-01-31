@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "diz": "^0.2.0",
-    "diz-theme-minimalist": "^0.2.2",
+    "diz-theme-minimalist": "^0.2.3",
     "magu": "^0.0.5",
     "magu-plugin-anchor": "^0.0.3"
   },
