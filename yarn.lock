@@ -1806,9 +1806,9 @@ diz-theme-minimalist@^0.1.3:
     react-burger-menu "^1.10.10"
     react-dom "^15.4.1"
 
-diz-theme-minimalist@^0.2.3:
-  version "0.2.3"
-  resolved "https://registry.yarnpkg.com/diz-theme-minimalist/-/diz-theme-minimalist-0.2.3.tgz#99090409dcd0fcbfaa9ddcb29bf8215d2b99256f"
+diz-theme-minimalist@^0.2.4:
+  version "0.2.4"
+  resolved "https://registry.yarnpkg.com/diz-theme-minimalist/-/diz-theme-minimalist-0.2.4.tgz#37a66baec75daea9c2bc8dd8b9377fc4591c4ce2"
   dependencies:
     diz-theme "^0.0.1"
     lodash.isnull "^3.0.0"
@@ -1827,9 +1827,9 @@ diz-theme@^0.0.1:
     babel-plugin-transform-runtime "^6.15.0"
     babel-preset-react "^6.16.0"
 
-diz@^0.2.0:
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/diz/-/diz-0.2.0.tgz#e43ea0cc75e141804df4f2e5d93da127a442bb61"
+diz@^0.2.1:
+  version "0.2.1"
+  resolved "https://registry.yarnpkg.com/diz/-/diz-0.2.1.tgz#08700d3eafa5a1e8d26d7fbd35430bd7aaa80b5b"
   dependencies:
     babel-loader "^6.2.10"
     babel-plugin-transform-runtime "^6.15.0"
