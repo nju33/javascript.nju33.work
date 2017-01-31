@@ -12,7 +12,8 @@ module.exports = {
   theme: {
     Renderer: Minimalist,
     config: {
-      inlineCSS: false
+      inlineCSS: false,
+      twemoji: true
     }
   },
   reverse: true,
