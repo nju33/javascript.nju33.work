@@ -88,7 +88,6 @@ export class TodoComponent {
   <ul>
     <li *ngFor="let item of items; let i = index">
       <div>{{item.content}}</div>
-      <input type="checkbox" (change)="onChange(i)">
     </li>
   </ul>
 </section>
@@ -106,4 +105,43 @@ export class TodoComponent {
 <todo></todo>
 ```
 
-TODO
+今の状態を、ブラウザで確認してこの画像のようになっていればココまで大丈夫です。
+
+![create todo app | first view](/images/start-angular2/images/first-view.png)
+
+## Task の状態を Toggle できるようにする
+
+上記セクションで記述した`todo.component`を編集して、チェックボックスをクリックするとタスクを完了して、再度クリックしたらタスク完了をキャンセルできる感じにしてみたいと思います。
+
+`todo.component.html`をこのようにします。
+
+```html
+<section>
+  <h1>Todo</h1>
+  <ul>
+    <li *ngFor="let item of items; let i = index">
+      <div style=display:inline>
+        <div *ngIf="!item.done">{{item.content}}</div>
+        <del *ngIf="item.done">{{item.content}}</del>
+      </div>
+      <input type="checkbox" (change)="onChange(item)">
+    </li>
+  </ul>
+</section>
+```
+
+`ngIf`は、値が`true`だと表示されて`false`だと要素自体がなくなるDirectiveです。つまり、`item.done`が`true`になった時、`<del></del>`要素で囲むようにします。
+
+さて`item.done`をToggleする方法ですが、`<input/>`に`onChange`というイベントを登録して、チェックが変わるたびにその`item`の`done`プロパティの`bool`を反対にするような方法でやりたいと思います。
+
+多分Angular2を知らない人は、`(change)`という見慣れない属性値を見て、さっそく困惑していると思います。僕はしました。
+
+これはAngular2から登場したOutputという機能で、この機能を使って外部のコンポーネントに対してこのコンポーネントの変更といった情報を知らせたりデータそのものを渡したりすることができます。これは`@Output(<eventAilias?>) <eventName> = new EventEmitter()`という感じで定義することができます。`this.<eventName>.emit()`した時、Output属性の値に指定したメソッドが呼び出されます。
+
+ただ、一般的なDOMイベント（`change`や`click`）はの場合は、理解が不十分なので間違ってるかもしれませんが、`@Output`宣言がいらなくて、その要素でDOMイベントが起きると、まるでOutputで宣言されたイベントの如く(`emit`みたいな)トリガーされて、Output値のメソッドを実行させることができます。
+
+<say>
+間違ってるかもしれませんが、多分[ココ](https://github.com/angular/angular/blob/8f5dd1f11e6ca1888fdbd3231c06d6df00aba5cc/modules/%40angular/platform-webworker/src/web_workers/ui/event_dispatcher.ts#L25)に載ってるものはOutputとして使えるんじゃないかなと思います。間違ってたらすいません。。
+</say>
+
+Todo
