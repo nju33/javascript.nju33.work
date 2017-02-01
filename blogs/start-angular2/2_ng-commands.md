@@ -218,3 +218,5 @@ aliases: t
 --sourcemap (Boolean) (Default: true)
   aliases: -sm
 ```
+
+https://github.com/angular/angular-cli/tree/088ebf000c284e6a14c3a76a5c8a406cf3ec5aa3/packages/angular-cli/commands
