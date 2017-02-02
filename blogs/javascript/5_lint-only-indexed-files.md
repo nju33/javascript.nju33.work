@@ -17,7 +17,7 @@ title: 【lint-staged】GitでIndexに登録したファイルだけLintチェ�
 
 とりあえず今回は、[sindresorhus/xo](https://github.com/sindresorhus/xo)というハピネスなJavascript用Linterを使いたいと思います。
 
-```
+```bash
 npm i -D lint-staged xo
 ```
 
