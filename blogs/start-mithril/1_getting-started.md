@@ -62,6 +62,7 @@ module.exports = {
     ]
   }
 }
+```
 
 そして、ビルドコマンドを`npm run-script`へ登録します。`package.json`の`scripts`を以下のように書きます。
 
