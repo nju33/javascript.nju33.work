@@ -139,3 +139,5 @@ git ccommit -m 💮
 <say>
 やったぜ🎉🎉🎉
 </say>
+
+ちなみに、この今回の例は、[javascript-nju33-work-examples/lint-only-indexed-files](https://github.com/javascript-nju33-work-examples/lint-only-indexed-files)に置いてます。
