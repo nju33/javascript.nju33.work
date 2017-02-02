@@ -48,6 +48,10 @@ gulp.task('style', () => {
     .pipe(gulp.dest('dist/javascript/styles'));
 });
 
+gulp.task('copy', () => {
+  gulp.src('src/*.html').pipe(gulp.dest('dist'))
+});
+
 gulp.task('watch', ['blog', 'image'], () => {
   bs.init(bsConfig, () => {
     gulp.watch('blogs/**/*', ['blog']);
