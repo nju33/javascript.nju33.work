@@ -170,9 +170,11 @@ export class TodoComponent {
 ng g component todo-form
 ```
 
+そして、`todo-form/todo-form.component.html`と`todo-form/todo-form.component.ts`をそれぞれこんな感じに編集します。
+
 ```html
-<form (submit)="onSubmit(todoForm.value, todoForm.valid)" [formGroup]="todoForm" novalidate>
-  <input type="text" [(ngModel)]="content" formControlName="content">
+<form [formGroup]="todoForm" (submit)="onSubmit(todoForm.value, todoForm.valid)"  novalidate>
+  <input type="text" formControlName="content"　[(ngModel)]="content">
   <input type="submit" [disabled]="todoForm.invalid">
 </form>
 ```
@@ -201,3 +203,11 @@ export class TodoFormComponent {
   }
 }
 ```
+
+`[formGroup]`には`FormGroup`のインスタンスを指定します。この`[...]`という書き方は[Attribute binding](https://angular.io/docs/ts/latest/guide/template-syntax.html#!#attribute-binding)と言って、設定した値は、実際にはその値を評価した結果に置き換わって設定されます。
+
+`[formGroup]`に属する入力フォームには、HTMLでいう`name`属性のように`formControlName`という属性を設定します。これで名前を設定すると、その入力フォームに関する設定を`FormControl`クラスで設定できるようになります。
+
+`new FormGroup(controls)`時に、`constrols`を渡す必要がありますが、この時の`key`になる名前が先程出てきた`formControlName`で指定した名前です。その値には、`FormControl`のインスタンスを渡します。
+
+`FormControl`の第一引数は、
