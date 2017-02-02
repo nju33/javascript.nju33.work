@@ -132,16 +132,72 @@ export class TodoComponent {
 
 `ngIf`は、値が`true`だと表示されて`false`だと要素自体がなくなるDirectiveです。つまり、`item.done`が`true`になった時、`<del></del>`要素で囲むようにします。
 
-さて`item.done`をToggleする方法ですが、`<input/>`に`onChange`というイベントを登録して、チェックが変わるたびにその`item`の`done`プロパティの`bool`を反対にするような方法でやりたいと思います。
+`item.done`をToggleする方法ですが、`<input/>`に`change`イベントを登録して、チェックが変わるたびにその`item`の`done`プロパティの`bool`を反対にするような方法でやりたいと思います。
 
-多分Angular2を知らない人は、`(change)`という見慣れない属性値を見て、さっそく困惑していると思います。僕はしました。
+多分Angular2を知らない人は、`(change)`という見慣れない属性値を見て、さっそく困惑していると思いますが僕もです。
 
-これはAngular2から登場したOutputという機能で、この機能を使って外部のコンポーネントに対してこのコンポーネントの変更といった情報を知らせたりデータそのものを渡したりすることができます。これは`@Output(<eventAilias?>) <eventName> = new EventEmitter()`という感じで定義することができます。`this.<eventName>.emit()`した時、Output属性の値に指定したメソッドが呼び出されます。
+Outputという機能で、この機能を使って外部のコンポーネントに対してこのコンポーネントのデータを渡したりすることができます。これは`@Output() <eventName> = new EventEmitter()`という感じで定義することができます。`this.<eventName>.emit()`した時、Output属性の値に指定したメソッドが呼び出されます。
 
-ただ、一般的なDOMイベント（`change`や`click`）はの場合は、理解が不十分なので間違ってるかもしれませんが、`@Output`宣言がいらなくて、その要素でDOMイベントが起きると、まるでOutputで宣言されたイベントの如く(`emit`みたいな)トリガーされて、Output値のメソッドを実行させることができます。
+ただ、じゃあ上記なら`@Output() change`とすればいいのだろうと思うかもしれませんが、一般的なDOMイベント（`change`や`click`）はの場合は、理解が不十分なので間違ってるかもしれませんが、いちいち`@Output`宣言はいりません。その要素でDOMイベントが起きると、`@Output`されたイベントの如く(`emit`みたいな)トリガーされて、Output値のメソッド(上記なら`onChange`)を実行させることができます。
 
 <say>
 間違ってるかもしれませんが、多分[ココ](https://github.com/angular/angular/blob/8f5dd1f11e6ca1888fdbd3231c06d6df00aba5cc/modules/%40angular/platform-webworker/src/web_workers/ui/event_dispatcher.ts#L25)に載ってるものはOutputとして使えるんじゃないかなと思います。間違ってたらすいません。。
 </say>
 
-Todo
+`onChange`メソッドを実装します。このメソッドの内容はただ渡された`item`の`done`プロパティのBool値を反転させるだけです。`TodoComponent`はこうなりました。
+
+```ts
+export class TodoComponent {
+  items: Task[]
+
+  constructor() {
+    this.items = [...];
+  }
+
+  onChange(item: Task) {
+    item.done = !item.done;
+  }
+}
+```
+
+これで、`input[type=checkbox]`をクリックしたら、線が引かれたり消えたりするようになったと思います。
+
+## タスクを追加するためのフォームコンポーネントを作る
+
+新しく`todo-form`コンポーネントを作ります。
+
+```bash
+ng g component todo-form
+```
+
+```html
+<form (submit)="onSubmit(todoForm.value, todoForm.valid)" [formGroup]="todoForm" novalidate>
+  <input type="text" [(ngModel)]="content" formControlName="content">
+  <input type="submit" [disabled]="todoForm.invalid">
+</form>
+```
+
+```ts
+import {Component} from '@angular/core';
+import {FormGroup, FormControl, Validators} from '@angular/forms';
+
+@Component({
+  selector: 'todo-form',
+  templateUrl: './todo-form.component.html',
+  styleUrls: ['./todo-form.component.css']
+})
+export class TodoFormComponent {
+  todoForm: FormGroup
+
+  constructor() {
+    this.todoForm = new FormGroup({
+      content: new FormControl('', Validators.required)
+    });
+  }
+
+  onSubmit(formValue: {content: string}) {
+    console.log(formValue);
+    this.todoForm.reset();
+  }
+}
+```
