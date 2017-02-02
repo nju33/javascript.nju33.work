@@ -22,10 +22,12 @@ module.exports = {
       const result = magu({
         code(code, lang) {
           if (!lang) {
-            return '<pre><code>code</code></pre>'
+            return `<pre><code>${code}</code></pre>`;
           }
+
+          const hled = highlight(lang, code).value;
           return `
-<pre><code class=lang--${lang}>${highlight(lang, code).value}</code></pre>
+<pre><code class=lang--${lang}>${hled.replace(/  /g, '<span class=hljs-indent>  </span>')}</code></pre>
           `;
         }
       }, [
