@@ -173,14 +173,14 @@ ng g component todo-form
 そして、`todo-form/todo-form.component.html`と`todo-form/todo-form.component.ts`をそれぞれこんな感じに編集します。
 
 ```html
-<form [formGroup]="todoForm" (submit)="onSubmit(todoForm.value, todoForm.valid)"  novalidate>
-  <input type="text" formControlName="content"　[(ngModel)]="content">
+<form (submit)="onSubmit(todoForm.value)" [formGroup]="todoForm" novalidate>
+  <input type="text" formControlName="content">
   <input type="submit" [disabled]="todoForm.invalid">
 </form>
 ```
 
 ```ts
-import {Component} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {FormGroup, FormControl, Validators} from '@angular/forms';
 
 @Component({
@@ -188,10 +188,10 @@ import {FormGroup, FormControl, Validators} from '@angular/forms';
   templateUrl: './todo-form.component.html',
   styleUrls: ['./todo-form.component.css']
 })
-export class TodoFormComponent {
+export class TodoFormComponent implements OnInit {
   todoForm: FormGroup
 
-  constructor() {
+  ngOnInit() {
     this.todoForm = new FormGroup({
       content: new FormControl('', Validators.required)
     });
@@ -210,4 +210,35 @@ export class TodoFormComponent {
 
 `new FormGroup(controls)`時に、`constrols`を渡す必要がありますが、この時の`key`になる名前が先程出てきた`formControlName`で指定した名前です。その値には、`FormControl`のインスタンスを渡します。
 
-`FormControl`の第一引数は、
+`FormControl`の第一引数は、初期値が2つ目にはValidatorを設定します。今回は`new FormControl('', Validators.required)`とValidatorは1つしか設定してませんが、複数設定したい場合は配列にして羅列することもできます。
+
+実はAngular2にはFormの作成方法には`FormsModule`と`ReactiveFormsModule`の2種類があって上記の説明は後者のものになります。Form部分のテストを書く時、前者ではブラウザで検証しなければいけないのに対して、後者はクラスをインスタンスして簡単に値を操作できるのでテストを書きやすくなるようです。
+
+<say>
+でもFormが複雑になってくるとどっちもどっちな感じだそう😦
+</say>
+
+`FormsModule`はAngular1のような`ngModel`を使用して値を管理するタイプ。ここでは詳しく調べませんが[ここのサンプルコード](https://angular.io/docs/ts/latest/api/forms/index/NgForm-directive.html)を見るとよくわかると思います。
+
+今現在`app.component.ts`で読み込まれているのは`FormsModule`なのでこれを`ReactiveFormsModule`に変更します。`ReactiveFormsModule`は`FormsModule`と同じ`@angular/forms`から`import`できます。
+
+```ts
+...
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+...
+@NgModule({
+  declarations: [...],
+  imports: [
+    BrowserModule,
+    ReactiveFormsModule,
+    HttpModule
+  ],
+  providers: []
+  ...
+})
+...
+```
+
+とりあえずここまでで、何かを入力すると`submit`が押せるようになって、押すと`console`にログが出るとこまでできました。
+
+## 共通で使えるService（Model）を作る
