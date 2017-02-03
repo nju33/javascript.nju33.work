@@ -59,7 +59,7 @@ interface Task {
   styleUrls: ['./todo.component.css']
 })
 export class TodoComponent {
-  items: Task[]
+  private todoItems: Task[]
 }
 ```
 
@@ -69,10 +69,10 @@ export class TodoComponent {
 
 ```ts
 export class TodoComponent {
-  items: Task[]
+  private todoItems: Task[]
 
   constructor() {
-    this.items = [
+    this.todoItems = [
       {content: 'foo', done: false},
       {content: 'bar', done: false}
     ];
@@ -86,8 +86,8 @@ export class TodoComponent {
 <section>
   <h1>Todo</h1>
   <ul>
-    <li *ngFor="let item of items; let i = index">
-      <div>{{item.content}}</div>
+    <li *ngFor="let task of todoItems">
+      <div>{{task.content}}</div>
     </li>
   </ul>
 </section>
@@ -119,12 +119,12 @@ export class TodoComponent {
 <section>
   <h1>Todo</h1>
   <ul>
-    <li *ngFor="let item of items; let i = index">
+    <li *ngFor="let task of todoItems">
       <div style=display:inline>
-        <div *ngIf="!item.done">{{item.content}}</div>
-        <del *ngIf="item.done">{{item.content}}</del>
+        <div *ngIf="!task.done">{{task.content}}</div>
+        <del *ngIf="task.done">{{task.content}}</del>
       </div>
-      <input type="checkbox" (change)="onChange(item)">
+      <input type="checkbox" (change)="onChange(task)">
     </li>
   </ul>
 </section>
@@ -148,14 +148,14 @@ Outputという機能で、この機能を使って外部のコンポーネン�
 
 ```ts
 export class TodoComponent {
-  items: Task[]
+  private todoItems: Task[]
 
   constructor() {
-    this.items = [...];
+    this.todoItems = [...];
   }
 
-  onChange(item: Task) {
-    item.done = !item.done;
+  onChange(task: Task) {
+    task.done = !task.done;
   }
 }
 ```
@@ -189,7 +189,7 @@ import {FormGroup, FormControl, Validators} from '@angular/forms';
   styleUrls: ['./todo-form.component.css']
 })
 export class TodoFormComponent implements OnInit {
-  todoForm: FormGroup
+  private todoForm: FormGroup
 
   ngOnInit() {
     this.todoForm = new FormGroup({
@@ -224,7 +224,7 @@ export class TodoFormComponent implements OnInit {
 
 ```ts
 ...
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import {ReactiveFormsModule} from '@angular/forms';
 ...
 @NgModule({
   declarations: [...],
@@ -242,3 +242,265 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 とりあえずここまでで、何かを入力すると`submit`が押せるようになって、押すと`console`にログが出るとこまでできました。
 
 ## 共通で使えるService（Model）を作る
+
+Serviceファイルを`ng`コマンドで作ります。以下のコマンドを実行すると、`todo.service.ts`ファイルが作られます。
+
+```bash
+ng g service todo
+```
+
+出来たファイルの中身はこんな感じになっているはずです。
+
+```ts
+import {Injectable} from '@angular/core';
+
+@Injectable()
+export class SampleService {
+  constructor() { }
+}
+```
+
+`@Injectable`というデコレーターを付けたものを`@NgModule`の`providers`へ渡すと、そのインスタンスを様々なClassの`constructor`で持ってくることができます。つまり、`app.module.ts`を以下のように編集します。
+
+```ts
+...
+import {TodoService} from './todo.service';
+...
+@NgModule({
+  declarations: [...],
+  imports: [...],
+  providers: [TodoService],
+  bootstrap: [...]
+})
+export class AppModule {}
+```
+
+これでComponentの`constructor`でもこんな感じでこのServiceのインスタンスを使えるようになりました。
+
+```
+@import {TodoService} from '../todo.service';
+@Component({...})
+class Component {
+  constructor(todoService: TodoService) {}
+}
+```
+
+`todo.component`に書いたTodoに関する情報を`todo.service`に移して、いくらか操作するためのメソッドなどを実装していきます。
+
+### TodoService
+
+```ts
+import {Injectable} from '@angular/core';
+
+// Keyは適当に変えてください😇
+export const LOCALSTRAGE_KEY = 'javascript.nju33.work/start-angular2';
+
+export class Task {
+  constructor(public content: string, public done: boolean = false) {}
+}
+
+@Injectable()
+export class TodoService {
+  private tasks: Task[]
+
+  constructor() {
+    const item = localStorage.getItem(LOCALSTRAGE_KEY);
+    if (item) {
+      this.tasks = JSON.parse(item);
+    } else {
+      this.tasks = [];
+    }
+  }
+
+  add(content: string) {
+    this.tasks.unshift(new Task(content));
+  }
+
+  get(): Task[] {
+    return this.tasks;
+  }
+
+  save() {
+    localStorage.setItem(LOCALSTRAGE_KEY, JSON.stringify(this.tasks));
+  }
+}
+```
+
+上記の内容はこんな感じです。
+
+- `constructor`でローカルストレージからデータを取得、無かったらただの`[]`を返す
+- `add`はTaskの追加
+- `get`はすべてのTaskを返す
+- `save`はlocalStorageへデータを保存
+
+では、このサービスを今まで作ってきたComponentに組み込みます。まずは、`todo-form.component.ts`です。
+
+### TodoFormComponent
+
+```ts
+import {Component, OnInit, Output, EventEmitter} from '@angular/core';
+import {FormGroup, FormControl, Validators} from '@angular/forms';
+import {TodoService} from '../todo.service';
+
+@Component({
+  selector: 'todo-form',
+  templateUrl: './todo-form.component.html',
+  styleUrls: ['./todo-form.component.css']
+})
+export class TodoFormComponent implements OnInit {
+  @Output() todoUpdate: EventEmitter<any> = new EventEmitter();
+  private todoForm: FormGroup;
+
+  constructor(private todoService: TodoService) {}
+
+  ngOnInit() {
+    this.todoForm = new FormGroup({
+      content: new FormControl('', Validators.required)
+    });
+  }
+
+  onSubmit(formValue: {content: string}) {
+    this.todoService.add(formValue.content);
+    this.todoForm.reset();
+    this.todoUpdate.emit();
+  }
+}
+```
+
+追加したのは、`todoUpdate`イベントを作ったことです。`onSubmit`でデータが追加されるとこのイベントがトリガーされて、そのタイミングで親（AppComponent）でも何か処理できるようになりました。
+
+### TodoComponent
+
+次に`todo/todo.component.ts`を編集します。
+
+```ts
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  OnInit,
+  DoCheck,
+  KeyValueDiffers
+} from '@angular/core';
+import {TodoService, Task} from '../todo.service';
+
+@Component({
+  selector: 'todo',
+  templateUrl: './todo.component.html',
+  styleUrls: ['./todo.component.css']
+})
+export class TodoComponent implements OnInit, DoCheck {
+  @Input() todoItems: Task[];
+  @Output() completeChange: EventEmitter<Task> = new EventEmitter();
+  private todoDiffers: any[];
+
+  constructor(private differs: KeyValueDiffers) {}
+
+  ngOnInit() {
+    this.todoDiffers = this.todoItems.map(item => {
+      return this.differs.find(item).create(null);
+    });
+  }
+
+  ngDoCheck() {
+    const changesArr = this.todoItems.filter((item, i) => {
+      const changes = this.todoDiffers[i].diff(item);
+      return changes;
+    });
+
+    if (changesArr.length > 0) {
+      this.completeChange.emit();
+    }
+  }
+
+  onChange(task: Task) {
+    task.done = !task.done;
+  }
+}
+```
+
+こっちは、まず`taskItems`をInputで取得するように変更しました。そして、ライフサイクルの１つで自動で実行される`ngDoCheck`メソッドを定義して、Taskオブジェクトに何らかのデータ変更が起きた場合、`completeChange`イベントが起きるように修正しました。ちなみに`ngOnChanges`という変更を察知して実行されるメソッドもありますが、こっちは`string`や`number`、`boolean`みたいなプリミティブな値しか察知できないみたいなので、`ngDoCheck`によりチェックを行っています。
+
+`@Input`でデータを取得する際の注意点ですが、必ずライフサイクルの1つである`ngOnInit`メソッドで行う必要があります。`constructor`で使おうとしても`undefined`となってしまいます。
+
+<say>
+ここにハマって1時間程悩みました😑
+</say>
+
+オブジェクトデータのチェックには`KeyValueDiffers`を使います。`const differ = this.differs.find(initData).create(null)`という感じで`initData`(最初のデータ)を渡した後、`differ.diff(nextData)`とすると、変更があった場合はそのオブジェクトを返して、変更がない場合は`null`を返してくれます。
+
+<say>
+最初調べた時、この`private differs: KeyValueDiffers`というのが「これ一体どこから来たんだ」って感じに思って混乱しました。
+`constructor`で読み込んでるってことは`@NgModule`の`providers`関連かなと思って調べてみると、`AppModule`の`@NgModule`の`imports`で読み込んでいる`BrowserModule`が`exports`している`ApplicationsModule`に含まれている`providers`に`KeyValueDiffres`がありましたとさ✌️
+
+あとちなみに、オブジェクトには`KeyValueDiffers`を使いますが、配列には`IterableDiffers`を使います。これも`ApplicationModule`の`providers`に記述されています。
+</say>
+
+### AppComponent周辺の編集
+
+以上を踏まえて`app.component.html`を編集します。
+
+```ts
+<todo [todoItems]="todoItems" (completeChange)="onCompleteChange($event)"></todo>
+<todo-form (todoUpdate)="onTodoUpdate()"></todo-form>
+```
+
+やっていることはこんな感じです。
+
+- TodoComponentで`completeChange`がトリガーされるとAppComponentの`onCompleteChange`メソッドが実行
+- TodoFormComponentで`todoUpdate`がトリガーされるとAppComponentの`onTodoUpdate`メソッドが実行
+- TodoComponentにAppComponentの`todoItems`を渡す
+
+上記であげたようなメソッドを実装します。
+
+```ts
+import {Component} from '@angular/core';
+import {TodoService} from './todo.service';
+import {Task} from './todo.service';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent {
+  todoItems: Task[];
+
+  constructor(private todoService: TodoService) {
+    this.todoItems = this.todoService.get();
+  }
+
+  handleTodoUpdate() {
+    this.todoService.save();
+  }
+
+  onTodoUpdate() {
+    this.handleTodoUpdate();
+  }
+
+  onCompleteChange() {
+    this.handleTodoUpdate();
+  }
+}
+```
+
+`onTodoUpdate`も`onCompleteChange`もただ、TodoServiceの`save()`コマンドでローカルストレージへ保存しているだけです。
+
+ローカルストレージへデータを格納することでデータを保持できるようになりました。ここまでで、リロードした時に前回の状態が復活すると思いますが、`task.content`には線が引かれているのに`checkbox`にはチェックが入ってないような状態になってしまいます。これを直すには、`input[type=checkbox]`に`[checked]`を追加します。
+
+```html
+<input type="checkbox" (change)="onChange(task)" [checked]="task.done">
+```
+
+## 色々改善
+
+### 開いた時に`task.done`が`false`なものは削除してしまう。
+
+AppComponentの`constructor`をこのように変更します。
+
+```ts
+constructor(private todoService: TodoService) {
+  this.todoItems = this.todoService.get().filter(task => !task.done);
+}
+```
