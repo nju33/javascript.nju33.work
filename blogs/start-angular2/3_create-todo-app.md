@@ -255,7 +255,7 @@ ng g service todo
 import {Injectable} from '@angular/core';
 
 @Injectable()
-export class SampleService {
+export class TodoService {
   constructor() { }
 }
 ```
@@ -277,7 +277,7 @@ export class AppModule {}
 
 これでComponentの`constructor`でもこんな感じでこのServiceのインスタンスを使えるようになりました。
 
-```
+```ts
 @import {TodoService} from '../todo.service';
 @Component({...})
 class Component {
@@ -312,6 +312,11 @@ export class TodoService {
     }
   }
 
+  init() {
+    this.tasks = this.tasks.filter(task => !task.done);
+    this.save();
+  }
+
   add(content: string) {
     this.tasks.unshift(new Task(content));
   }
@@ -320,7 +325,11 @@ export class TodoService {
     return this.tasks;
   }
 
-  save() {
+  remove(index: number) {
+    this.tasks.splice(index, 1);
+  }
+
+  save(): void {
     localStorage.setItem(LOCALSTRAGE_KEY, JSON.stringify(this.tasks));
   }
 }
@@ -329,8 +338,10 @@ export class TodoService {
 上記の内容はこんな感じです。
 
 - `constructor`でローカルストレージからデータを取得、無かったらただの`[]`を返す
+- `init`は`done`なTaskを削除
 - `add`はTaskの追加
 - `get`はすべてのTaskを返す
+- `remove`は`index`の位置のTaskを削除
 - `save`はlocalStorageへデータを保存
 
 では、このサービスを今まで作ってきたComponentに組み込みます。まずは、`todo-form.component.ts`です。
@@ -405,6 +416,10 @@ export class TodoComponent implements OnInit, DoCheck {
 
   ngDoCheck() {
     const changesArr = this.todoItems.filter((item, i) => {
+      if (typeof this.todoDiffers[i] === 'undefined') {
+        this.todoDiffers.unshift(this.differs.find(item).create(null));
+        return item;
+      }
       const changes = this.todoDiffers[i].diff(item);
       return changes;
     });
@@ -420,7 +435,9 @@ export class TodoComponent implements OnInit, DoCheck {
 }
 ```
 
-こっちは、まず`taskItems`をInputで取得するように変更しました。そして、ライフサイクルの１つで自動で実行される`ngDoCheck`メソッドを定義して、Taskオブジェクトに何らかのデータ変更が起きた場合、`completeChange`イベントが起きるように修正しました。ちなみに`ngOnChanges`という変更を察知して実行されるメソッドもありますが、こっちは`string`や`number`、`boolean`みたいなプリミティブな値しか察知できないみたいなので、`ngDoCheck`によりチェックを行っています。
+こっちは、まず`taskItems`をInputで取得するように変更しました。そして、ライフサイクルの１つで自動で実行される`ngDoCheck`メソッドを定義して、Taskオブジェクトに何らかのデータ変更が起きた場合、`completeChange`イベントが起きるように修正しました。また新しく追加されたデータの場合は`differ`を作成して、変更があったと振る舞うようにしてます。
+
+ちなみに`ngOnChanges`という変更を察知して実行されるメソッドもありますが、こっちは`string`や`number`、`boolean`みたいなプリミティブな値しか察知できないみたいです。
 
 `@Input`でデータを取得する際の注意点ですが、必ずライフサイクルの1つである`ngOnInit`メソッドで行う必要があります。`constructor`で使おうとしても`undefined`となってしまいます。
 
@@ -455,7 +472,7 @@ export class TodoComponent implements OnInit, DoCheck {
 上記であげたようなメソッドを実装します。
 
 ```ts
-import {Component} from '@angular/core';
+import {Component, ApplicationRef} from '@angular/core';
 import {TodoService} from './todo.service';
 import {Task} from './todo.service';
 
@@ -465,13 +482,15 @@ import {Task} from './todo.service';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  todoItems: Task[];
+  todoItems: Task[]
 
   constructor(private todoService: TodoService) {
+    this.todoService.init();
     this.todoItems = this.todoService.get();
   }
 
   handleTodoUpdate() {
+    this.todoItems = this.todoService.get();
     this.todoService.save();
   }
 
@@ -485,7 +504,7 @@ export class AppComponent {
 }
 ```
 
-`onTodoUpdate`も`onCompleteChange`もただ、TodoServiceの`save()`コマンドでローカルストレージへ保存しているだけです。
+`onTodoUpdate`も`onCompleteChange`もただ、TodoServiceの`save()`コマンドでローカルストレージへ保存しているだけです。`constructor`では最初ローカルストレージからデータを読み込んだ時に、`init`メソッドで`task.done`が完了しているものを削除しています。
 
 ローカルストレージへデータを格納することでデータを保持できるようになりました。ここまでで、リロードした時に前回の状態が復活すると思いますが、`task.content`には線が引かれているのに`checkbox`にはチェックが入ってないような状態になってしまいます。これを直すには、`input[type=checkbox]`に`[checked]`を追加します。
 
@@ -495,12 +514,66 @@ export class AppComponent {
 
 ## 色々改善
 
-### 開いた時に`task.done`が`false`なものは削除してしまう。
+### 進歩を表示
 
-AppComponentの`constructor`をこのように変更します。
+何個中何個完了してるのか表示してみたいと思います。大げさかもしれませんが、まだPipeを使っていなかったので使って実装してみたいと思います。
+
+```bash
+ng g pipe complete-length
+# installing pipe
+#   create src/app/complete-length.pipe.spec.ts
+#   create src/app/complete-length.pipe.ts
+#   update src/app/app.module.ts
+```
+
+`complete-length.pipe.ts`が作られました。この中の`transform`メソッドに処理内容を書いていきます。
+
+`value | pipe:arg1:arg2`みたい感じでPipeを書くと`transform`へ`transform(value, arg1, arg2)`という感じで値が渡ってきます。
+
+というわけで内容はこんな感じになりました。
 
 ```ts
-constructor(private todoService: TodoService) {
-  this.todoItems = this.todoService.get().filter(task => !task.done);
+import {Pipe, PipeTransform} from '@angular/core';
+import {Task} from './todo.service';
+
+@Pipe({
+  name: 'completeLength'
+})
+export class CompleteLengthPipe implements PipeTransform {
+  transform(todoItems: Task[]): number {
+    console.log(todoItems)
+    return todoItems.filter(task => task.done).length;
+  }
 }
 ```
+
+`todo.component.html`の方にも変更を加えます。
+
+```html
+<section>
+  <h1>Todo <small>{{todoItems | completeLength}}/{{todoItems.length}}</small></h1>
+  <ul>...</ul>
+</section>
+```
+
+できました！
+
+ただこれ、最初の1回しか動きません😱
+
+ググるとどうやら配列の場合は参照自体を変えないと変更があったとみなされないようです。ただ、`@Pipe`の中で`pure:false`にしてあげると、配列の中身が変っただけでも感知されるみたいなので早速指定します。
+
+```ts
+@Pipe({
+  name: 'completeLength'
+  pure: false
+})
+```
+
+<say>
+スペシャルサンクスな記事😙
+[Angular2のPipeを使う上で開発者が知るべきたった1つのこと](http://blog.mitsuruog.info/2016/07/just-do-not-use-pipe-in-filter-and-sort.html)
+</say>
+
+## とりあえず完成？
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/JZQ62YP07NY" frameborder="0" allowfullscreen></iframe>
