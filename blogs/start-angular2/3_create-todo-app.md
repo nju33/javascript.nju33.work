@@ -572,6 +572,12 @@ export class CompleteLengthPipe implements PipeTransform {
 <say>
 スペシャルサンクスな記事😙
 [Angular2のPipeを使う上で開発者が知るべきたった1つのこと](http://blog.mitsuruog.info/2016/07/just-do-not-use-pipe-in-filter-and-sort.html)
+
+上記によると、
+
+> Pipeでフィルタやソートは行わないでくれと行っています。本家ではこれらの機能をComponent側に移動することを推奨しています。
+
+だそうなので、ちゃんとしたプロジェクトでは使わないようにしましょうｗ
 </say>
 
 ## とりあえず完成？
