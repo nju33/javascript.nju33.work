@@ -17,15 +17,29 @@ $ npm i -g vue-cli
 ```bash
 $ vue init nuxt/starter try-nuxt
 
-? Project name try-nuxt
-? Project description Nuxt.js project
-? Author nju33 <nju33.ki@gmail.com>
+# ? Project name try-nuxt
+# ? Project description Nuxt.js project
+# ? Author nju33 <nju33.ki@gmail.com>
+#
+#    vue-cli · Generated "try-nuxt".
+#
+#    To get started:
+#
+#      cd try-nuxt
+#      npm install # Or yarn
+#      npm run dev
+```
 
-   vue-cli · Generated "try-nuxt".
+`npm run dev`とするとlocalhost:3000でサーバーが立ち上がります。アクセスしてこんな画面になったら準備完了です。
 
-   To get started:
+![After run dev](/getting-started/images/getting-started/after-run-dev.png)
 
-     cd try-nuxt
-     npm install # Or yarn
-     npm run dev
+ちなみにポートを変えたい場合は`dev`スクリプトで`PORT`環境変数に違う数値を設定するように変更します。
+
+```json
+{
+  "scripts": {
+    "dev": "PORT=3333 nuxt"
+  }
+}
 ```
