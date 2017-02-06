@@ -30,6 +30,8 @@ $ vue init nuxt/starter try-nuxt
 #      npm run dev
 ```
 
+これでだけでNuxtJSなプロジェクト環境ができました。
+
 `npm run dev`とするとlocalhost:3000でサーバーが立ち上がります。アクセスしてこんな画面になったら準備完了です。
 
 ![After run dev](/getting-started/images/getting-started/after-run-dev.png)

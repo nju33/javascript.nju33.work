@@ -41,8 +41,8 @@ title: NuxtJSで生成されたファイルを眺める
 │   └── index.vue
 ├── static
 │   └── favicon.ico
-├── plugins # デフォルトでは無い
-├── store # デフォルトでは無い
+├── plugins # デフォルトでは無い(vue用のプラグインを使う)
+├── store # デフォルトでは無い(vuexを使う)
 └── yarn.lock # yarn の時だけ
 ```
 
@@ -140,6 +140,60 @@ build: {
 
 こっちはAssetsとほぼ一緒で、単にWebpackの処理をしないような静的ファイルを置きます。
 
+## Store
+
+これは多分、複数のページに渡って状態を保持したい場合なんかに使うんじゃないかと思います。
+
+<say>
+あとで訂正するかも🤔
+</say>
+
+この機能を使うには、[vuex](https://vuex.vuejs.org/ja/)を追加でインストールする必要があります。
+
+```bash
+npm i -S vuex
+yarn add vuex
+```
+
+NuxtJSは`store/index.js`ファイルがあるとこれを実行してくれるので、このファイルで`Vuex.Store`のインスタンスを`export`するようにします。
+
+```js
+import Vuex from 'vuex';
+export default new Vuex.Store({...});
+```
+
+`export`した`store`は、`.vue`ファイルのTemplateの中で`$store`という変数でアクセスできます。
+
+```html
+<template>
+  <button @click="$store.commit('increment')">{{$store.state.counter}}</button>
+</template>
+```
+
+それぞれの値を分割`export`してNuxtJSにStoreを組み上げてもらう方法もあります。これは[ココ](https://nuxtjs.org/guide/vuex-store#modules-mode)を参照すると分かりやすいと思います。
+
+### Plugins
+
+事前に使いたいVuePluginをインストールしておきます。（ここでは仮に`vue-plugin`とします）`plugins/vue-plugin.js`を作って以下のようにします。
+
+クライアントサイドだけで有効にしたい場合は、`process.BROWSER_BUILD`。サーバーサイドだけなら`process.SERVER_BUILD`というフラグを使って有効なプラグインを変えることができます。。
+
+```js
+import Vue from 'vue';
+import VuePlugin from 'vue-plugin';
+
+if (process.BROWSER_BUILD) {
+  Vue.use(VuePlugin);
+}
+```
+
+そして、`nuxt.config.js`でそのプラグインを設定します。`build.vender`はパフォーマンスを上げるために指定します。
+
+```js
+build: {vendor: ['vue-plugin']},
+plugins: ['~plugins/vue-plugin']
+```
+
 ### Middleware
 
 良くわからないので誰か教えてください。
@@ -190,7 +244,22 @@ router: {
 }
 ```
 
-基準パスを設定するには親Routeに`children`を設定します。上記の`users-id`なRouteはこう書くこともできます。
+基準パスを設定するには親Routeに`children`を設定します。上記の`users-id`なRouteはこう書くこともできます。一つ重要な点は、`children`を持つような`component`はマークアップに`<nuxt-child/>`を書くということを忘れないようにする必要があります。
+
+もし動的なパスの中にもIgnoreパターンを設定したい場合は、その`.vue`の Export Object の中に`validate`というメソッドを定義して弾くことができます。
+
+```js
+validate() {
+  export default {
+    validate ({params}) {
+      // Must be a number
+      return /^\d+$/.test(params.id)
+    }
+  }  
+}
+```
+
+上記では、`params.id`がNumberの時は正常に表示されますが、違う場合は`error.vue`が表示されます。
 
 ```js
 router: {
@@ -215,6 +284,8 @@ router: {
 }
 ```
 
+親が動的な場合にも対応できます。
+
 ```js
 router: {
   routes: [
@@ -223,12 +294,30 @@ router: {
       component: 'pages/_slug.vue',
       children: [
         {
-          path: '',
-          component: 'pages/_slug/index.vue',
-          name: 'category'
+          path: ':childSlug', // /:slug/:childSlug
+          component: 'pages/_slug/_childSlug.vue',
+          chilren: [
+            {
+              path: '',
+              component: 'page/_slug/_childSlug/index.vue'
+              name: 'something'
+            }
+          ]
         }
       ]
     }
   ]
+}
+```
+
+## 好きなパッケージを使う
+
+基本的にただ`<script/>`の中で`import`したりして自由に使えるみたいです。ただし、パフォーマンスを上げるために`nuxt.config.js`の`build/vender`に使ったパッケージ名を書いた方が良さげです。
+
+```js
+module.exports = {
+  build: {
+    vendor: ['axios']
+  }
 }
 ```
