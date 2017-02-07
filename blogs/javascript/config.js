@@ -25,10 +25,14 @@ module.exports = {
             return `<pre><code>${code}</code></pre>`;
           }
 
-          const hled = highlight(lang, code).value;
-          return `
-<pre><code class=lang--${lang}>${hled.replace(/  /g, '<span class=hljs-indent>  </span>')}</code></pre>
-          `;
+          try {
+            const hled = highlight(lang, code).value;
+            return `
+  <pre><code class=lang--${lang}>${hled.replace(/  /g, '<span class=hljs-indent>  </span>')}</code></pre>
+            `;
+          } catch (e) {
+            return `<pre><code class=lang--${lang}>${code}</code></pre>`;
+          }
         }
       }, [
         anchor(),
